@@ -70,7 +70,7 @@ const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
   const { address: walletAddress } = useContext(WalletContext)
   const [qrData, setqrData] = useState("")
   const [pid, setPID] = useState({}) // set polygon id
-  const [disabled, setDisabled] = useState(false)
+  const [disabled, setDisabled] = useState(true)
 
   useEffect(() =>  {
     const update = async () => {
