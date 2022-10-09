@@ -80,7 +80,8 @@ const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
   }, [walletAddress])
 
   const updateMap = async () => {
-    if (walletAddress) {
+    /* @ts-ignore */
+    if (walletAddress && pid.pid) {
       const { data, error } = await supabase
         .from('eth-pid-map')
         .upsert(
