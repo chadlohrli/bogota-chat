@@ -10,9 +10,18 @@ import {
 import { WalletContext } from '../contexts/wallet'
 import { useContext, useEffect, useState } from 'react'
 import QRCode from "react-qr-code";
+import io from 'socket.io-client'
+import { createClient } from '@supabase/supabase-js'
+
+let socket
 
 const VERIFIER_ENDPOINT = process.env.NEXT_PUBLIC_VERIFIER_ENDPOINT
-console.log(VERIFIER_ENDPOINT)
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY
+
+const supabaseUrl = 'https://oskbyxzffucaainswhzk.supabase.co'
+const supabaseKey = process.env.SUPABASE_KEY
+{/* @ts-ignore */ }
+const supabase = createClient(supabaseUrl, SUPABASE_KEY)
 
 type XmtpInfoRowProps = {
   icon: JSX.Element
@@ -25,6 +34,7 @@ type XmtpInfoRowProps = {
 type XmtpInfoPanelProps = {
   onConnect?: () => Promise<void>
 }
+
 
 const InfoRow = ({
   icon,
@@ -58,9 +68,37 @@ const InfoRow = ({
 const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
   const { address: walletAddress } = useContext(WalletContext)
   const [qrData, setqrData] = useState("")
+  const [pid, setPID] = useState("") // set polygon id
+
+  const mySubscription = supabase
+    .from('eth-pid-map')
+    .on('INSERT', payload => {
+      console.log('Change received!', payload)
+      alert(payload.new.polygon_id)
+      setPID(payload.new.polygon_id)
+    })
+    .subscribe()
+
+  {/* @ts-ignore */ }
+
+  /*
+  useEffect(() => socketInitializer(), [])
+  const socketInitializer = async () => {
+    socket = io("http://localhost:8080")
+
+    socket.on('connect', () => {
+      console.log('connected')
+    })
+
+    socket.on("auth", (...args) => {
+      console.log(args)
+    });
+
+  }
+  */
+
 
   useEffect(() => {
-
     const options = {
       method: "GET",
       headers: {
@@ -89,35 +127,23 @@ const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
       subHeadingText: 'Verify your wallet to start using the XMTP protocol',
       onClick: onConnect,
       disabled: !!walletAddress,
-    },
-    {
-      icon: <BookOpenIcon />,
-      headingText: 'Read the docs',
-      subHeadingText:
-        'Check out the documentation for our protocol and find out how to get up and running quickly',
-      onClick: () => window.open('https://docs.xmtp.org', '_blank'),
-    },
-    {
-      icon: <UserGroupIcon />,
-      headingText: 'Join our community',
-      subHeadingText:
-        'Talk about what you’re building or find out other projects that are building upon XMTP',
-      onClick: () => window.open('https://community.xmtp.org', '_blank'),
-    },
+    }
   ]
 
   return (
     // The info panel is only shown in desktop layouts.
     <div className="hidden md:block m-auto w-[464px]">
       <div className="pb-6">
-        <div className="text-xl text-n-600 font-semibold mb-1">
-          Welcome to the web3 communication protocol
+        <div className="text-xl text-n-600 font-semibold mb-1 text-center">
+          Polygon ID Chat - Chat with your VCs
         </div>
-        <div className="text-md text-n-300">
-          Get started by reading the docs or joining the community
+        <div className="text-md text-n-300 text-center mb-2">
+          Get started by scanning the QR code and authenticating with the polygon ID app
         </div>
-        {/* @ts-ignore */}
-        <QRCode value={qrData} />
+        <div className="flex items-center justify-center">
+          {/* @ts-ignore */}
+          <QRCode value={qrData} />
+        </div>
       </div>
       <div>
         {InfoRows.map((info, index) => {

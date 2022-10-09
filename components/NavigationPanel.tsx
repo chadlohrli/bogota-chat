@@ -24,7 +24,7 @@ const NavigationPanel = ({ onConnect }: NavigationPanelProps): JSX.Element => {
         <ConversationsPanel />
       ) : (
         <NoWalletConnectedMessage>
-          <ConnectButton onConnect={onConnect} />
+          {/*<ConnectButton onConnect={onConnect} />*/}
         </NoWalletConnectedMessage>
       )}
     </div>
