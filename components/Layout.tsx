@@ -8,9 +8,18 @@ import NavigationPanel from './NavigationPanel'
 import XmtpInfoPanel from './XmtpInfoPanel'
 import UserMenu from './UserMenu'
 import BackArrow from './BackArrow'
-import { useCallback, useContext } from 'react'
+import { useCallback, useContext, useState, useEffect } from 'react'
 import { WalletContext } from '../contexts/wallet'
 import XmtpContext from '../contexts/xmtp'
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_KEY
+
+const supabaseUrl = 'https://oskbyxzffucaainswhzk.supabase.co'
+const supabaseKey = process.env.SUPABASE_KEY
+{/* @ts-ignore */ }
+const supabase = createClient(supabaseUrl, SUPABASE_KEY)
+
 
 const NavigationColumnLayout: React.FC = ({ children }) => (
   <aside className="flex w-full md:w-84 flex-col flex-grow fixed inset-y-0">
@@ -39,6 +48,36 @@ const ConversationLayout: React.FC = ({ children }) => {
   const router = useRouter()
   const recipientWalletAddress = router.query.recipientWalletAddr as string
 
+  const [addresses, setAddresses] = useState([])
+
+  {/* @ts-ignore */ }
+  const onlyUnique = (value, index, self) => {
+    return self.indexOf(value) === index;
+  }
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      const { data, error } = await supabase
+        .from('eth-pid-map')
+        .select()
+
+      var ethAddresses = data!.reduce(function (filtered, element) {
+        let address = element.eth_address
+        if (address) {
+          filtered.push(address);
+        }
+        return filtered;
+      }, []);
+
+      ethAddresses = ethAddresses.filter(onlyUnique)
+ 
+      console.log(ethAddresses)
+      {/* @ts-ignore */ }
+      setAddresses(ethAddresses)
+    }
+    fetchAddresses()
+  }, [])
+
   const handleSubmit = async (address: string) => {
     router.push(address ? `/dm/${address}` : '/dm/')
   }
@@ -53,10 +92,20 @@ const ConversationLayout: React.FC = ({ children }) => {
         <div className="md:hidden flex items-center ml-3">
           <BackArrow onClick={handleBackArrowClick} />
         </div>
+        <div className="block w-full">
         <RecipientControl
           recipientWalletAddress={recipientWalletAddress}
           onSubmit={handleSubmit}
         />
+        {/* @ts-ignore */}
+        <p className='mb-3'>Your Peers</p>
+        {addresses.map((item, index) => (
+          <div className="text-black text-lg md:text-md font-bold place-self-start">
+            {item}
+            </div>
+        ))}
+        </div>
+
       </TopBarLayout>
       {children}
     </>
