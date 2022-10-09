@@ -12,6 +12,7 @@ import { useContext, useEffect, useState } from 'react'
 import QRCode from "react-qr-code";
 import io from 'socket.io-client'
 import { createClient } from '@supabase/supabase-js'
+import Address from './Address'
 
 let socket
 
@@ -68,14 +69,39 @@ const InfoRow = ({
 const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
   const { address: walletAddress } = useContext(WalletContext)
   const [qrData, setqrData] = useState("")
-  const [pid, setPID] = useState("") // set polygon id
+  const [pid, setPID] = useState({}) // set polygon id
+  const [disabled, setDisabled] = useState(false)
+
+  useEffect(() =>  {
+    const update = async () => {
+      await updateMap()
+    }
+    update()
+  }, [walletAddress])
+
+  const updateMap = async () => {
+    if (walletAddress) {
+      const { data, error } = await supabase
+        .from('eth-pid-map')
+        .upsert(
+          /* @ts-ignore */ 
+          { id: pid.id, polygon_id: pid.pid, eth_address: walletAddress}
+        )
+
+      console.log(data)
+      console.log(error)
+    }
+  }
 
   const mySubscription = supabase
     .from('eth-pid-map')
     .on('INSERT', payload => {
       console.log('Change received!', payload)
-      alert(payload.new.polygon_id)
-      setPID(payload.new.polygon_id)
+      if (payload.new.polygon_id !== null) {
+        alert(payload.new.polygon_id)
+        setPID({pid: payload.new.polygon_id, id: payload.new.id})
+        setDisabled(false)
+      }
     })
     .subscribe()
 
@@ -96,7 +122,6 @@ const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
 
   }
   */
-
 
   useEffect(() => {
     const options = {
@@ -126,7 +151,7 @@ const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
       headingText: 'Connect your wallet',
       subHeadingText: 'Verify your wallet to start using the XMTP protocol',
       onClick: onConnect,
-      disabled: !!walletAddress,
+      disabled: disabled,
     }
   ]
 
