@@ -8,7 +8,11 @@ import {
   ArrowSmRightIcon,
 } from '@heroicons/react/solid'
 import { WalletContext } from '../contexts/wallet'
-import { useContext } from 'react'
+import { useContext, useEffect, useState } from 'react'
+import QRCode from "react-qr-code";
+
+const VERIFIER_ENDPOINT = process.env.NEXT_PUBLIC_VERIFIER_ENDPOINT
+console.log(VERIFIER_ENDPOINT)
 
 type XmtpInfoRowProps = {
   icon: JSX.Element
@@ -53,6 +57,31 @@ const InfoRow = ({
 
 const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
   const { address: walletAddress } = useContext(WalletContext)
+  const [qrData, setqrData] = useState("")
+
+  useEffect(() => {
+
+    const options = {
+      method: "GET",
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Credentials': 'true'
+      }
+    };
+
+    const fetchData = async () => {
+      {/* @ts-ignore */ }
+      const res = await fetch(VERIFIER_ENDPOINT, options)
+      console.log(res)
+      const data = JSON.stringify(await res.json())
+      console.log(data)
+      setqrData(data)
+    }
+
+    fetchData().catch(console.error);
+  }, [])
+
   const InfoRows = [
     {
       icon: <LinkIcon />,
@@ -87,6 +116,8 @@ const XmtpInfoPanel = ({ onConnect }: XmtpInfoPanelProps): JSX.Element => {
         <div className="text-md text-n-300">
           Get started by reading the docs or joining the community
         </div>
+        {/* @ts-ignore */}
+        <QRCode value={qrData} />
       </div>
       <div>
         {InfoRows.map((info, index) => {

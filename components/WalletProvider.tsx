@@ -171,7 +171,7 @@ export const WalletProvider = ({
       signer = newSigner
       setAddress(await signer.getAddress())
     }
-    initCached()
+    //initCached()
   }, [web3Modal])
 
   return (
